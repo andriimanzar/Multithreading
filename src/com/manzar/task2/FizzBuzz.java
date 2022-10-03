@@ -2,10 +2,13 @@ package com.manzar.task2;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.IntConsumer;
+import java.util.function.IntPredicate;
 
 public class FizzBuzz {
-
+    private static final IntPredicate FIZZ_NUMBER = x -> x % 3 == 0 && x % 5 != 0;
+    private static final IntPredicate BUZZ_NUMBER = x -> x % 3 != 0 && x % 5 == 0;
+    private static final IntPredicate FIZZ_BUZZ_NUMBER = x -> x % 3 == 0 && x % 5 == 0;
+    private static final IntPredicate SIMPLE_NUMBER = x -> x % 3 != 0 && x % 5 != 0;
     private final int lastNumber;
     private int currentNumber = 1;
     private final Lock lock = new ReentrantLock();
@@ -16,53 +19,28 @@ public class FizzBuzz {
     }
 
     public void fizz(Runnable printFizz) {
-        while (currentNumber <= lastNumber) {
-            try {
-                lock.lock();
-                if (currentNumber % 3 == 0 && currentNumber % 5 != 0) {
-                    printFizz.run();
-                    currentNumber++;
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
+        checkConditionAndRun(FIZZ_NUMBER, printFizz);
     }
 
     public void buzz(Runnable printBuzz) {
-        while (currentNumber <= lastNumber) {
-            try {
-                lock.lock();
-                if (currentNumber % 3 != 0 && currentNumber % 5 == 0) {
-                    printBuzz.run();
-                    currentNumber++;
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
+        checkConditionAndRun(BUZZ_NUMBER, printBuzz);
     }
 
     public void fizzBuzz(Runnable printFizzBuzz) {
-        while (currentNumber <= lastNumber) {
-            try {
-                lock.lock();
-                if (currentNumber % 3 == 0 && currentNumber % 5 == 0) {
-                    printFizzBuzz.run();
-                    currentNumber++;
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
+        checkConditionAndRun(FIZZ_BUZZ_NUMBER, printFizzBuzz);
     }
 
-    public void printNumber(IntConsumer intConsumer) {
+    public void printNumber(String printNumber) {
+        Runnable printSimpleNumber = () -> System.out.printf(printNumber, currentNumber);
+        checkConditionAndRun(SIMPLE_NUMBER, printSimpleNumber);
+    }
+
+    private void checkConditionAndRun(IntPredicate integerPredicate, Runnable runnable) {
         while (currentNumber <= lastNumber) {
             try {
                 lock.lock();
-                if (currentNumber % 3 != 0 && currentNumber % 5 != 0) {
-                    intConsumer.accept(currentNumber);
+                if (integerPredicate.test(currentNumber)) {
+                    runnable.run();
                     currentNumber++;
                 }
             } finally {
